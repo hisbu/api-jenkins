@@ -1,6 +1,9 @@
 pipeline{
   agent any
 
+  environment{
+    DOCKER_TAG = getDockerTag()
+  }
   stages{
     stage('install depencencies'){
       steps{
@@ -26,5 +29,21 @@ pipeline{
         sh "docker stop testapi"
       }
     }
+    stage('Push image'){
+      steps{
+        script{
+          docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-hisbu'){
+            api.push("${DOCKER_TAG}")
+            api.push("latest")
+          }
+        }
+      }
+
+    }
   }
+}
+
+def getDockerTag(){
+  def tag = sh script: "git rev-parse HEAD", returnStdout: true
+  return tag
 }
